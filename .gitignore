@@ -1,0 +1,7 @@
+build*/
+sdkconfig
+sdkconfig.old
+sdkconfig.*.bak
+managed_components/
+.component_hash
+.vscode/
