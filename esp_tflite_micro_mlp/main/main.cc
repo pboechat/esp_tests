@@ -265,7 +265,7 @@ extern "C" void app_main(void)
             return;
         }
         uint32_t cycles = end - start;
-        ESP_LOGI("esp_mlp", "Inference took %" PRIu32 " cycles", cycles);
+        ESP_LOGI("esp_tflite_micro_mlp", "Inference took %" PRIu32 " cycles", cycles);
 
         MicroPrintf("******************************");
         for (uint32_t i = 0; i < 10; ++i)
