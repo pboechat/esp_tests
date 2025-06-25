@@ -65,7 +65,7 @@ void app_main(void) {
     int c = 0;
     while (1) {
 	printf("\n");
-        print_commands();
+    print_commands();
 	c = getchar();
 	printf("\n");
 	switch (c) {
