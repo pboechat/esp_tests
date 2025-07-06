@@ -5,3 +5,5 @@ sdkconfig.*.bak
 managed_components/
 .component_hash
 .vscode/
+.venv/
+__pycache__/
