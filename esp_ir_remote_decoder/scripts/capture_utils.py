@@ -49,7 +49,7 @@ def get_sirc_bit_length(protocol: Protocol) -> int:
     return SIRC_VARIANT_BITS.get(protocol, 0)
 
 
-def _within(measured: int, target: int, tolerance: float) -> bool:
+def within(measured: int, target: int, tolerance: float) -> bool:
     if target <= 0:
         return False
     return abs(measured - target) <= target * tolerance
@@ -121,7 +121,7 @@ def detect_protocol(symbols: Sequence[Symbol], tolerance: float = DEFAULT_PULSE_
 
 def _looks_like_nec(symbols: Sequence[Symbol], tolerance: float) -> bool:
     leader = symbols[0]
-    if not (_within(leader[1], NEC_LEADER_LOW_US, tolerance) and _within(leader[3], NEC_LEADER_HIGH_US, tolerance)):
+    if not (within(leader[1], NEC_LEADER_LOW_US, tolerance) and within(leader[3], NEC_LEADER_HIGH_US, tolerance)):
         return False
     bit_slots = _count_nec_data_bits(symbols, tolerance)
     return bit_slots >= NEC_TOTAL_BITS
@@ -129,12 +129,12 @@ def _looks_like_nec(symbols: Sequence[Symbol], tolerance: float) -> bool:
 
 def _looks_like_nec_repeat(symbols: Sequence[Symbol], tolerance: float) -> bool:
     leader = symbols[0]
-    if not (_within(leader[1], NEC_LEADER_LOW_US, tolerance) and _within(leader[3], NEC_REPEAT_HIGH_US, tolerance)):
+    if not (within(leader[1], NEC_LEADER_LOW_US, tolerance) and within(leader[3], NEC_REPEAT_HIGH_US, tolerance)):
         return False
     if len(symbols) < 2:
         return False
     burst = symbols[1]
-    return _within(burst[1], NEC_BIT_LOW_US, tolerance)
+    return within(burst[1], NEC_BIT_LOW_US, tolerance)
 
 
 def _count_nec_data_bits(symbols: Sequence[Symbol], tolerance: float) -> int:
@@ -142,9 +142,9 @@ def _count_nec_data_bits(symbols: Sequence[Symbol], tolerance: float) -> int:
     for symbol in symbols[1:]:
         low_us = symbol[1]
         high_us = symbol[3]
-        if not _within(low_us, NEC_BIT_LOW_US, tolerance):
+        if not within(low_us, NEC_BIT_LOW_US, tolerance):
             continue
-        if _within(high_us, NEC_BIT0_HIGH_US, tolerance) or _within(high_us, NEC_BIT1_HIGH_US, tolerance):
+        if within(high_us, NEC_BIT0_HIGH_US, tolerance) or within(high_us, NEC_BIT1_HIGH_US, tolerance):
             bit_slots += 1
         else:
             break
@@ -156,17 +156,17 @@ def _looks_like_sirc(symbols: Sequence[Symbol], tolerance: float) -> Protocol | 
         return None
     leader = symbols[0]
     if not (
-        _within(leader[1], SIRC_LEADER_MARK_US, tolerance)
-        and _within(leader[3], SIRC_LEADER_SPACE_US, tolerance)
+        within(leader[1], SIRC_LEADER_MARK_US, tolerance)
+        and within(leader[3], SIRC_LEADER_SPACE_US, tolerance)
     ):
         return None
     bits = 0
     for symbol in symbols[1:]:
         mark_us = symbol[1]
         space_us = symbol[3]
-        if not _within(mark_us, SIRC_MARK_US, tolerance):
+        if not within(mark_us, SIRC_MARK_US, tolerance):
             break
-        if _within(space_us, SIRC_SPACE0_US, tolerance) or _within(space_us, SIRC_SPACE1_US, tolerance):
+        if within(space_us, SIRC_SPACE0_US, tolerance) or within(space_us, SIRC_SPACE1_US, tolerance):
             bits += 1
         else:
             break
@@ -186,10 +186,10 @@ def _looks_like_rc5(symbols: Sequence[Symbol], tolerance: float) -> bool:
     # RC5 encodes every half bit with ~889us pulses and alternates level each half
     max_halves = RC5_TOTAL_BITS * 2
     for dur in durations[:max_halves]:
-        if _within(dur, RC5_HALF_BIT_US, tolerance):
+        if within(dur, RC5_HALF_BIT_US, tolerance):
             continue
         # some captures may merge two halves; allow double-sized durations
-        if _within(dur, RC5_HALF_BIT_US * 2, tolerance):
+        if within(dur, RC5_HALF_BIT_US * 2, tolerance):
             continue
         return False
     for idx in range(1, min(len(segments), max_halves)):

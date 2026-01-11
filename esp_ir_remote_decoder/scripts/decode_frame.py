@@ -397,14 +397,14 @@ def plot_rc5(symbols: Sequence[Symbol], frame: Rc5Frame, output_path: Path) -> N
 
 def main() -> None:
     parser = argparse.ArgumentParser(
-        description="Decode and visualize IR frames from the firmware CSV capture"
+        description="Decode and visualize IR frames from the CSV capture"
     )
     parser.add_argument(
         "-i",
         "--input",
         type=Path,
         required=True,
-        help="Path to the CSV produced by the firmware dump",
+        help="Path to the CSV produced by the capture",
     )
     parser.add_argument(
         "-p",
@@ -420,6 +420,7 @@ def main() -> None:
         help="Relative tolerance (0-1) when matching pulse durations",
     )
     args = parser.parse_args()
+
     symbols = load_symbols(args.input)
     protocol = detect_protocol(symbols, tolerance=args.tolerance)
     print(f"Detected protocol: {protocol.name}")
@@ -427,27 +428,27 @@ def main() -> None:
     if protocol == Protocol.NEC_REPEAT:
         print("Detected NEC repeat frame (no new payload to decode).")
         sys.exit(0)
-    if protocol == Protocol.NEC:
+    elif protocol == Protocol.NEC:
         frame = decode_nec(symbols, tolerance=args.tolerance)
         print_nec_summary(frame)
         if args.png:
             plot_nec(symbols, frame, args.png)
         sys.exit(0)
-    if protocol in (Protocol.SIRC_12, Protocol.SIRC_15, Protocol.SIRC_20):
+    elif protocol in (Protocol.SIRC_12, Protocol.SIRC_15, Protocol.SIRC_20):
         frame = decode_sirc(symbols, protocol, tolerance=args.tolerance)
         print_sirc_summary(frame)
         if args.png:
             plot_sirc(symbols, frame, args.png)
         sys.exit(0)
-    if protocol == Protocol.RC5:
+    elif protocol == Protocol.RC5:
         frame = decode_rc5(symbols, tolerance=args.tolerance)
         print_rc5_summary(frame)
         if args.png:
             plot_rc5(symbols, frame, args.png)
         sys.exit(0)
-
-    print("Unsupported or unknown protocol; nothing to decode.")
-    sys.exit(1)
+    else:
+        print("Unsupported or unknown protocol; nothing to decode.")
+        sys.exit(1)
 
 
 if __name__ == "__main__":

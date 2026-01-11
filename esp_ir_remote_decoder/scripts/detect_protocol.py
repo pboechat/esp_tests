@@ -1,17 +1,15 @@
 #!/usr/bin/env python3
 
 from __future__ import annotations
+from capture_utils import (DEFAULT_PULSE_TOLERANCE, detect_protocol,
+                           load_symbols)
+from pathlib import Path
+import sys
+import argparse
 
 scripts_dir = Path(__file__).resolve().parent
 if str(scripts_dir) not in sys.path:
     sys.path.insert(0, str(scripts_dir))
-
-import argparse
-import sys
-from pathlib import Path
-
-from capture_utils import (DEFAULT_PULSE_TOLERANCE, detect_protocol,
-                           load_symbols)
 
 
 def main() -> None:
@@ -31,9 +29,11 @@ def main() -> None:
         help="Relative tolerance (0-1) when matching pulse durations",
     )
     args = parser.parse_args()
+
     symbols = load_symbols(args.input)
     protocol = detect_protocol(symbols, tolerance=args.tolerance)
     print(f"Detected protocol: {protocol.name}")
+
     sys.exit(0)
 
 

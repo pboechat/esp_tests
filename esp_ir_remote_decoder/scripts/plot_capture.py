@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
 
 from __future__ import annotations
+from capture_utils import build_waveform, load_symbols
+import matplotlib.pyplot as plt
+import matplotlib
 
 import argparse
 import sys
@@ -11,9 +14,6 @@ scripts_dir = Path(__file__).resolve().parent
 if str(scripts_dir) not in sys.path:
     sys.path.insert(0, str(scripts_dir))
 
-import matplotlib
-import matplotlib.pyplot as plt
-from capture_utils import build_waveform, load_symbols
 
 matplotlib.use("Agg")
 
@@ -33,7 +33,9 @@ def plot_waveform(times_ms: Sequence[float], levels: Sequence[int], output_path:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Plot IR capture CSV to PNG")
+    parser = argparse.ArgumentParser(
+        description="Plot IR capture CSV to PNG"
+    )
     parser.add_argument(
         "-i", "--input",
         type=Path,
@@ -47,6 +49,7 @@ def main() -> None:
         help="Destination path for the generated PNG",
     )
     args = parser.parse_args()
+
     symbols = load_symbols(args.input)
     times_ms, levels = build_waveform(symbols)
     plot_waveform(times_ms, levels, args.output)
