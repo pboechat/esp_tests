@@ -1,0 +1,63 @@
+# ESP-IDF-ish clang-format
+# ESP-IDF itself uses Astyle; this is a "close enough" configuration
+
+BasedOnStyle: LLVM
+
+# indentation: ESP-IDF prefer tabs, but I can't stand that...
+UseTab: Never
+IndentWidth: 4
+TabWidth: 4
+ContinuationIndentWidth: 4
+
+# braces: Allman-like
+BreakBeforeBraces: Allman
+BraceWrapping:
+  AfterControlStatement: true
+  AfterFunction: true
+  AfterStruct: true
+  AfterUnion: true
+  AfterEnum: true
+  AfterNamespace: true
+  BeforeElse: true
+  BeforeCatch: true
+  IndentBraces: false
+
+# access specifiers
+IndentAccessModifiers: false
+AccessModifierOffset: -4
+
+# constructors
+PackConstructorInitializers: NextLineOnly
+BreakConstructorInitializers: AfterColon
+
+# line length: keep reasonable; ESP-IDF code often avoids aggressive reflow.
+ColumnLimit: 120
+ReflowComments: false
+
+# switch/case: common embedded style
+IndentCaseLabels: false
+IndentCaseBlocks: false
+
+# whitespace / compactness
+AllowShortIfStatementsOnASingleLine: Never
+AllowShortLoopsOnASingleLine: false
+AllowShortFunctionsOnASingleLine: None
+AllowShortBlocksOnASingleLine: Never
+
+SpaceBeforeParens: ControlStatements
+SpacesInParentheses: false
+SpacesInSquareBrackets: false
+SpaceInEmptyParentheses: false
+
+# pointers/references: common C style
+PointerAlignment: Right
+ReferenceAlignment: Pointer
+
+# keep includes fairly stable (not exactly ESP-IDF's...)
+SortIncludes: true
+
+# a bit of alignment help without going overboard
+AlignConsecutiveMacros: Consecutive
+AlignConsecutiveAssignments: None
+AlignConsecutiveDeclarations: None
+AlignTrailingComments: true
