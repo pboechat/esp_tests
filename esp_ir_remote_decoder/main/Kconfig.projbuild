@@ -1,0 +1,27 @@
+menu "IR Remote Decoder Configuration"
+
+config IR_RX_GPIO
+    int "IR receiver input GPIO"
+    range 0 46
+    default 4 if IDF_TARGET_ESP32C3
+    default 4
+    help
+        GPIO connected to the IR demodulator output.
+
+config IR_OLED_SDA_GPIO
+    int "OLED SDA GPIO"
+    range 0 46
+    default 8 if IDF_TARGET_ESP32C3
+    default 8
+    help
+        SDA pin for the SSD1306 display.
+
+config IR_OLED_SCL_GPIO
+    int "OLED SCL GPIO"
+    range 0 46
+    default 9 if IDF_TARGET_ESP32C3
+    default 9
+    help
+        SCL pin for the SSD1306 display.
+
+endmenu
