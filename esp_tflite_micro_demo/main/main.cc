@@ -5,9 +5,9 @@
 #include "model.h"
 #include "portmacro.h"
 #include "sdkconfig.h"
-#include "tensorflow/lite/micro/micro_mutable_op_resolver.h"
 #include "tensorflow/lite/micro/micro_interpreter.h"
 #include "tensorflow/lite/micro/micro_log.h"
+#include "tensorflow/lite/micro/micro_mutable_op_resolver.h"
 #include "tensorflow/lite/micro/system_setup.h"
 #include "tensorflow/lite/schema/schema_generated.h"
 
@@ -120,22 +120,20 @@ static void hsv2rgb(uint8_t hsv[], uint8_t rgb[])
 
 extern "C" void app_main(void)
 {
-    led_strip_config_t strip_config = {
-        .strip_gpio_num = LED_GPIO,
-        .max_leds = 1,
-        .led_model = LED_MODEL_WS2812,
-        .color_component_format = LED_STRIP_COLOR_COMPONENT_FMT_RGB,
-        .flags = {
-            .invert_out = false,
-        }};
+    led_strip_config_t strip_config = {.strip_gpio_num = LED_GPIO,
+                                       .max_leds = 1,
+                                       .led_model = LED_MODEL_WS2812,
+                                       .color_component_format = LED_STRIP_COLOR_COMPONENT_FMT_RGB,
+                                       .flags = {
+                                           .invert_out = false,
+                                       }};
 
-    led_strip_rmt_config_t rmt_config = {
-        .clk_src = RMT_CLK_SRC_DEFAULT,
-        .resolution_hz = (10 * 1000 * 1000), // 10 MHz
-        .mem_block_symbols = 0,
-        .flags = {
-            .with_dma = false,
-        }};
+    led_strip_rmt_config_t rmt_config = {.clk_src = RMT_CLK_SRC_DEFAULT,
+                                         .resolution_hz = (10 * 1000 * 1000), // 10 MHz
+                                         .mem_block_symbols = 0,
+                                         .flags = {
+                                             .with_dma = false,
+                                         }};
 
     ESP_ERROR_CHECK(led_strip_new_rmt_device(&strip_config, &rmt_config, &led_strip));
     ESP_ERROR_CHECK(led_strip_clear(led_strip));
@@ -170,8 +168,7 @@ extern "C" void app_main(void)
     int inference_count = 0;
     while (true)
     {
-        float position = static_cast<float>(inference_count) /
-                         static_cast<float>(kInferencesPerCycle);
+        float position = static_cast<float>(inference_count) / static_cast<float>(kInferencesPerCycle);
         float x = position * kXrange;
 
         int8_t x_quantized = x / input->params.scale + input->params.zero_point;
@@ -205,8 +202,8 @@ extern "C" void app_main(void)
         ESP_ERROR_CHECK(led_strip_refresh(led_strip));
 
         // Log the current X and Y values
-        MicroPrintf("x: %f, y: %f, rgb: [%d, %d, %d]", static_cast<double>(x),
-                    static_cast<double>(y), rgb[0], rgb[1], rgb[2]);
+        MicroPrintf("x: %f, y: %f, rgb: [%d, %d, %d]", static_cast<double>(x), static_cast<double>(y), rgb[0], rgb[1],
+                    rgb[2]);
 
         inference_count += 1;
         if (inference_count >= kInferencesPerCycle)

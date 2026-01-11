@@ -1,15 +1,15 @@
-#include "sdkconfig.h"
-#include "esp_cpu.h"
-#include "esp_log.h"
 #include "driver/uart.h"
 #include "driver/uart_vfs.h"
+#include "esp_cpu.h"
+#include "esp_log.h"
 #include "input.h"
 #include "model.h"
+#include "sdkconfig.h"
 #include "tensorflow/lite/micro/micro_interpreter.h"
 #include "tensorflow/lite/micro/micro_log.h"
 #include "tensorflow/lite/micro/micro_mutable_op_resolver.h"
-#include "tensorflow/lite/schema/schema_generated.h"
 #include "tensorflow/lite/micro/system_setup.h"
+#include "tensorflow/lite/schema/schema_generated.h"
 
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
@@ -149,8 +149,8 @@ extern "C" void app_main(void)
     const tflite::Model *model = tflite::GetModel(g_model);
     if (model->version() != TFLITE_SCHEMA_VERSION)
     {
-        MicroPrintf("Model provided is schema version %d not equal to supported version %d",
-                    model->version(), TFLITE_SCHEMA_VERSION);
+        MicroPrintf("Model provided is schema version %d not equal to supported version %d", model->version(),
+                    TFLITE_SCHEMA_VERSION);
         return;
     }
 
@@ -172,11 +172,7 @@ extern "C" void app_main(void)
         return;
     }
 
-    tflite::MicroInterpreter interpreter(
-        model,
-        resolver,
-        g_tensor_arena,
-        TENSOR_ARENA_SIZE);
+    tflite::MicroInterpreter interpreter(model, resolver, g_tensor_arena, TENSOR_ARENA_SIZE);
 
     status = interpreter.AllocateTensors();
     if (status != kTfLiteOk)

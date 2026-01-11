@@ -1,7 +1,7 @@
-#include "sdkconfig.h"
 #include "driver/gpio.h"
 #include "driver/uart.h"
 #include "driver/uart_vfs.h"
+#include "sdkconfig.h"
 
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
@@ -9,9 +9,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#define TEST_COUNT 20
+#define TEST_COUNT      20
 #define HALF_WAVE_DELAY 500
-#define DEBUG_INPUT 0
+#define DEBUG_INPUT     0
 
 struct WorkItem
 {
