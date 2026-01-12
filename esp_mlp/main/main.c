@@ -18,6 +18,21 @@
 #include <unistd.h>
 
 // -----------------------------------------------------------------------------
+// blocking get character from UART or JTAG console
+static int get_char(void)
+{
+    int c = getchar();
+#if CONFIG_ESP_CONSOLE_UART_NUM < 0
+    while (c == -1)
+    {
+        vTaskDelay(10 / portTICK_PERIOD_MS);
+        c = getchar();
+    }
+#endif
+    return c;
+}
+
+// -----------------------------------------------------------------------------
 // LUT with approximate uint32 e^x for x=-128..127
 static const uint32_t g_exp_lut_32[256] = {
     0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000,
@@ -292,8 +307,10 @@ void app_main(void)
     char c;
     uint32_t start, end;
 
+#if CONFIG_ESP_CONSOLE_UART_NUM >= 0
     uart_driver_install(CONFIG_ESP_CONSOLE_UART_NUM, 256, 0, 0, NULL, 0);
     uart_vfs_dev_use_driver(CONFIG_ESP_CONSOLE_UART_NUM);
+#endif
 
     printf("  __  __   _        _____    \n");
     printf(" |  \\/  | | |      |  __ \\ \n");
@@ -307,7 +324,7 @@ void app_main(void)
     {
         printf("Select digit [0-9]: ");
 
-        c = (char)getchar();
+        c = (char)get_char();
 
         printf("%c\n", c);
 

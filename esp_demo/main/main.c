@@ -9,7 +9,20 @@
 #include <inttypes.h>
 #include <stdio.h>
 
-void print_commands(void)
+static int get_char(void)
+{
+    int c = getchar();
+#if CONFIG_ESP_CONSOLE_UART_NUM < 0
+    while (c == -1)
+    {
+        vTaskDelay(10 / portTICK_PERIOD_MS);
+        c = getchar();
+    }
+#endif
+    return c;
+}
+
+static void print_commands(void)
 {
     printf("Choose a command:\n");
     printf("\ti = print_chip_info\n");
@@ -17,9 +30,9 @@ void print_commands(void)
     printf("\tx = exit\n");
 }
 
-void print_chip_info(void)
+static void print_chip_info(void)
 {
-    /* Print chip information */
+    /* print chip information */
     esp_chip_info_t chip_info;
     uint32_t flash_size;
     esp_chip_info(&chip_info);
@@ -43,7 +56,7 @@ void print_chip_info(void)
     printf("Minimum free heap size: %" PRIu32 " bytes\n", esp_get_minimum_free_heap_size());
 }
 
-void restart(void)
+static void restart(void)
 {
     for (int i = 10; i >= 0; i--)
     {
@@ -57,14 +70,16 @@ void restart(void)
 
 void app_main(void)
 {
+#if CONFIG_ESP_CONSOLE_UART_NUM >= 0
     uart_driver_install(CONFIG_ESP_CONSOLE_UART_NUM, 256, 0, 0, NULL, 0);
     uart_vfs_dev_use_driver(CONFIG_ESP_CONSOLE_UART_NUM);
+#endif
     int c = 0;
     while (1)
     {
         printf("\n");
         print_commands();
-        c = getchar();
+        c = get_char();
         printf("\n");
         switch (c)
         {

@@ -12,8 +12,8 @@ Usage:
 
 Args:
   -t, --target   (required) ESP-IDF target string (e.g., esp32, esp32c3, esp32s3)
-  -p, --project  (required) Project subdirectory name under the script directory
-  -u, --usb-port (optional) USB port
+  -p, --project  (optional) Project subdirectory name under the script directory (default: all projects)
+  -u, --usb      (optional) JTAG or UART (default: JTAG)
   -h, --help     Show this help
 EOF
 }
@@ -32,7 +32,7 @@ source "${SCRIPT_DIR}/sourceme"
 
 TARGET=""
 PROJECT=""
-USB_PORT="/dev/ttyUSB0"
+USB="JTAG"
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -46,9 +46,9 @@ while [[ $# -gt 0 ]]; do
       PROJECT="$2"
       shift 2
       ;;
-	-u|--usb-port)
+	-u|--usb)
 	  [[ $# -ge 2 ]] || die "Missing value for $1"
-      USB_PORT="$2"
+      USB="$2"
       shift 2
       ;;
     -h|--help)
@@ -69,6 +69,23 @@ while [[ $# -gt 0 ]]; do
 done
 
 [[ -n "$TARGET" ]] || { usage; die "--target is required"; }
-[[ -n "$PROJECT" ]] || { usage; die "--project is required"; }
 
-setup_project "${TARGET}" "${SCRIPT_DIR}/${PROJECT}" "${USB_PORT}"
+if [[ "$USB" != "JTAG" && "$USB" != "UART" ]]; then
+  die "Invalid value for --usb: $USB (must be JTAG or UART)"
+fi
+
+if [[ -n "$PROJECT" ]]; then
+  d="${SCRIPT_DIR}/${PROJECT}"
+  if is_project "$d"; then
+    setup_project "${TARGET}" "$d" "${USB}"
+  fi
+else
+  shopt -s nullglob
+  for d in "${SCRIPT_DIR}"/*/; do
+    # `*/` glob ensures it's a directory; trim trailing slash for prettiness
+    d="${d%/}"
+    if is_project "$d"; then
+      setup_project "${TARGET}" "$d" "${USB}"
+    fi
+  done
+fi

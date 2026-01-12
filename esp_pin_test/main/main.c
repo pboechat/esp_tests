@@ -19,6 +19,19 @@ struct WorkItem
     gpio_num_t gpio_num;
 };
 
+static int get_char(void)
+{
+    int c = getchar();
+#if CONFIG_ESP_CONSOLE_UART_NUM < 0
+    while (c == -1)
+    {
+        vTaskDelay(10 / portTICK_PERIOD_MS);
+        c = getchar();
+    }
+#endif
+    return c;
+}
+
 void worker_task(void *arg)
 {
     struct WorkItem *work_item = (struct WorkItem *)arg;
@@ -63,8 +76,10 @@ void worker_task(void *arg)
 
 void app_main(void)
 {
+#if CONFIG_ESP_CONSOLE_UART_NUM >= 0
     uart_driver_install(CONFIG_ESP_CONSOLE_UART_NUM, 256, 0, 0, NULL, 0);
     uart_vfs_dev_use_driver(CONFIG_ESP_CONSOLE_UART_NUM);
+#endif
 
     printf("Square-wave pin test\n");
 
@@ -83,7 +98,7 @@ void app_main(void)
         pin_idx = 0;
         while (1)
         {
-            c = (char)getchar();
+            c = (char)get_char();
             if (c >= '0' && c <= '9')
             {
                 pin_idx = (int)(c - '0') + (pin_idx * 10);
@@ -104,7 +119,7 @@ void app_main(void)
             xTaskCreate(worker_task, "worker", 4096, (void *)&work_item, 5, &worker_handle);
 
             printf("Press enter to end...\n");
-            getchar();
+            get_char();
 
             xTaskNotifyGive(worker_handle);
 
