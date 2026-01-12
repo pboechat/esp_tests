@@ -12,7 +12,7 @@ Usage:
 
 Args:
   -t, --target   (required) ESP-IDF target string (e.g., esp32, esp32c3, esp32s3)
-  -p, --project  (optional) Project subdirectory name under the script directory
+  -p, --project  (optional) Project subdirectory name under the script directory (default: all projects)
   -h, --help     Show this help
 EOF
 }

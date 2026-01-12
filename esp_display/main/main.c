@@ -51,6 +51,19 @@ static esp_lcd_panel_io_handle_t io_handle = NULL;
 static esp_lcd_panel_handle_t panel_handle = NULL;
 static uint16_t *color_buffer = NULL;
 
+static int get_char(void)
+{
+    int c = getchar();
+#if CONFIG_ESP_CONSOLE_UART_NUM < 0
+    while (c == -1)
+    {
+        vTaskDelay(10 / portTICK_PERIOD_MS);
+        c = getchar();
+    }
+#endif
+    return c;
+}
+
 IRAM_ATTR static bool on_color_trans_done(esp_lcd_panel_io_handle_t panel_io, esp_lcd_panel_io_event_data_t *edata,
                                           void *user_ctx)
 {
@@ -114,8 +127,10 @@ static void finalize_ili9341()
 
 void app_main(void)
 {
+#if CONFIG_ESP_CONSOLE_UART_NUM >= 0
     uart_driver_install(CONFIG_ESP_CONSOLE_UART_NUM, 256, 0, 0, NULL, 0);
     uart_vfs_dev_use_driver(CONFIG_ESP_CONSOLE_UART_NUM);
+#endif
 
     trans_done = xSemaphoreCreateBinary();
     assert(trans_done != NULL);
@@ -131,7 +146,7 @@ void app_main(void)
     while (1)
     {
         printf("Choose a command [d=draw, x=mirror x, y=mirror y, q=quit]: ");
-        c = (char)getchar();
+        c = (char)get_char();
         printf("%c\n", c);
 
         switch (c)

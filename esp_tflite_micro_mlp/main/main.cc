@@ -24,6 +24,19 @@ constexpr int TENSOR_ARENA_SIZE = 24 * 1024;
 
 uint8_t g_tensor_arena[TENSOR_ARENA_SIZE];
 
+static int get_char(void)
+{
+    int c = getchar();
+#if CONFIG_ESP_CONSOLE_UART_NUM < 0
+    while (c == -1)
+    {
+        vTaskDelay(10 / portTICK_PERIOD_MS);
+        c = getchar();
+    }
+#endif
+    return c;
+}
+
 static const char *get_TfLiteStatus_str(TfLiteStatus status)
 {
     switch (status)
@@ -143,8 +156,10 @@ void print_TfLiteTensor(const TfLiteTensor *tensor)
 
 extern "C" void app_main(void)
 {
+#if CONFIG_ESP_CONSOLE_UART_NUM >= 0
     uart_driver_install(uart_port_t(CONFIG_ESP_CONSOLE_UART_NUM), 256, 0, 0, nullptr, 0);
     uart_vfs_dev_use_driver(CONFIG_ESP_CONSOLE_UART_NUM);
+#endif
 
     const tflite::Model *model = tflite::GetModel(g_model);
     if (model->version() != TFLITE_SCHEMA_VERSION)
@@ -210,7 +225,7 @@ extern "C" void app_main(void)
     while (true)
     {
         MicroPrintf("Select digit [0-9]: ");
-        char c = (char)getchar();
+        char c = (char)get_char();
         MicroPrintf("%c", c);
         switch (c)
         {
