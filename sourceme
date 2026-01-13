@@ -51,8 +51,8 @@ for line in lines:
     replaced = False
     for key, value in pairs.items():
         line = line.strip()
-        if line.startswith(f"{key} =") or \
-          line.startswith(f"{key}="):
+        if line.startswith(f"{key}=") or \
+          line.startswith(f"# {key} is not set"):
             out_lines.append(f"{key}={value}")
             seen.add(key)
             replaced = True
@@ -155,18 +155,20 @@ setup_project() {
 
   [[ -f "$sdkconfig_path" ]] || die "sdkconfig not found: ${sdkconfig_path}"
 
-  local console_settings=()
+  local settings=(
+    "CONFIG_ESPTOOLPY_HEADER_FLASHSIZE_UPDATE=y"
+  )
   if [[ "$usb" == "JTAG" ]]; then
-    console_settings=(
+    settings+=(
 	  "CONFIG_ESP_CONSOLE_USB_SERIAL_JTAG=y"
     )
   else  # UART
-    console_settings=(
+    settings+=(
       "CONFIG_ESP_CONSOLE_UART_DEFAULT=y"
     )
   fi
 
-  update_sdkconfig_settings "$sdkconfig_path" "${console_settings[@]}"
+  update_sdkconfig_settings "$sdkconfig_path" "${settings[@]}"
 
   idf.py -B "build_${target}" reconfigure
 
