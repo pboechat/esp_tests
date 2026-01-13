@@ -77,7 +77,20 @@ static i2c_master_bus_handle_t s_i2c_bus = NULL;
 static esp_lcd_panel_io_handle_t s_oled_io = NULL;
 static esp_lcd_panel_handle_t s_oled_panel = NULL;
 
-static inline void oled_set_pixel(int x, int y, bool on)
+static int get_char(void)
+{
+    int c = getchar();
+#if CONFIG_ESP_CONSOLE_UART_NUM < 0
+    while (c == -1)
+    {
+        vTaskDelay(10 / portTICK_PERIOD_MS);
+        c = getchar();
+    }
+#endif
+    return c;
+}
+
+static void oled_set_pixel(int x, int y, bool on)
 {
     if (!s_oled_ready)
     {
@@ -338,6 +351,7 @@ static bool IRAM_ATTR rmt_rx_done_callback(rmt_channel_handle_t channel, const r
 
 static void init_uart(void)
 {
+#if CONFIG_ESP_CONSOLE_UART_NUM >= 0
     const uart_config_t uart_cfg = {
         .baud_rate = 115200,
         .data_bits = UART_DATA_8_BITS,
@@ -351,6 +365,7 @@ static void init_uart(void)
     ESP_ERROR_CHECK(uart_param_config(UART_PORT, &uart_cfg));
     ESP_ERROR_CHECK(
         uart_set_pin(UART_PORT, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE));
+#endif
 }
 
 static void init_rmt(void)
@@ -385,19 +400,14 @@ static void init_rmt(void)
     ESP_ERROR_CHECK(rmt_enable(s_rx_channel));
 }
 
-static int read_duration_ms_from_uart(void)
+static int read_duration(void)
 {
     char buffer[16] = {0};
     size_t idx = 0;
 
     while (idx < sizeof(buffer) - 1)
     {
-        uint8_t ch = 0;
-        const int len = uart_read_bytes(UART_PORT, &ch, 1, portMAX_DELAY);
-        if (len <= 0)
-        {
-            continue;
-        }
+        char ch = (char)get_char();
 
         if (ch == '\r' || ch == '\n')
         {
@@ -405,7 +415,7 @@ static int read_duration_ms_from_uart(void)
             {
                 continue;
             }
-            uart_write_bytes(UART_PORT, "\r\n", 2);
+            printf("\n");
             break;
         }
         if (ch == 0x08 || ch == 0x7f)
@@ -414,19 +424,20 @@ static int read_duration_ms_from_uart(void)
             {
                 idx--;
                 buffer[idx] = '\0';
-                uart_write_bytes(UART_PORT, "\b \b", 3);
+                printf("\b \b");
             }
             continue;
         }
         if (!isdigit((int)ch))
         {
-            uart_write_bytes(UART_PORT, "\a", 1);
+            printf("\a");
             continue;
         }
 
         buffer[idx++] = (char)ch;
-        uart_write_bytes(UART_PORT, (const char *)&ch, 1);
+        printf("%c", ch);
     }
+    printf("\n");
 
     return atoi(buffer);
 }
@@ -494,12 +505,12 @@ static void capture_for_duration(uint32_t duration_ms)
     ESP_ERROR_CHECK(rmt_enable(s_rx_channel));
 }
 
-static void dump_capture_to_uart(void)
+static void dump_capture(void)
 {
     char line[96];
     if (s_capture_count == 0)
     {
-        uart_write_bytes(UART_PORT, "END\r\n", 5);
+        printf("END\n");
         return;
     }
 
@@ -508,11 +519,11 @@ static void dump_capture_to_uart(void)
     {
         size_t idx = (start_idx + i) % MAX_CAPTURE_ITEMS;
         const rmt_symbol_word_t *item = &s_capture_buffer[idx];
-        int len = snprintf(line, sizeof(line), "%u,%u,%u,%u,%u\r\n", (unsigned)i, (unsigned)item->level0,
-                           (unsigned)item->duration0, (unsigned)item->level1, (unsigned)item->duration1);
-        uart_write_bytes(UART_PORT, line, len);
+        snprintf(line, sizeof(line), "%u,%u,%u,%u,%u\n", (unsigned)i, (unsigned)item->level0, (unsigned)item->duration0,
+                 (unsigned)item->level1, (unsigned)item->duration1);
+        printf("%s", line);
     }
-    uart_write_bytes(UART_PORT, "END\r\n", 5);
+    printf("END\n");
 }
 
 void app_main(void)
@@ -523,19 +534,18 @@ void app_main(void)
 
     while (true)
     {
-        const char *prompt = "\r\nEnter capture duration in ms: ";
-        uart_write_bytes(UART_PORT, prompt, strlen(prompt));
-        int duration = read_duration_ms_from_uart();
+        printf("Enter capture duration (ms):\n");
+        int duration = read_duration();
         if (duration <= 0)
         {
-            uart_write_bytes(UART_PORT, "Duration must be > 0\r\n", 24);
+            printf("Duration must be > 0\n");
             continue;
         }
 
         ESP_LOGI(TAG, "Capturing for %d ms", duration);
         capture_for_duration((uint32_t)duration);
         ESP_LOGI(TAG, "Captured %u items", (unsigned)s_capture_count);
-        dump_capture_to_uart();
+        dump_capture();
         oled_render_capture();
     }
 }
