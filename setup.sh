@@ -14,6 +14,7 @@ Args:
   -t, --target   (required) ESP-IDF target string (e.g., esp32, esp32c3, esp32s3)
   -p, --project  (optional) Project subdirectory name under the script directory (default: all projects)
   -u, --usb      (optional) JTAG or UART (default: JTAG)
+  -c, --clean    (optional) Clean build directory (if it exists)
   -h, --help     Show this help
 EOF
 }
@@ -33,6 +34,7 @@ source "${SCRIPT_DIR}/sourceme"
 TARGET=""
 PROJECT=""
 USB="JTAG"
+CLEAN=0
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -46,10 +48,14 @@ while [[ $# -gt 0 ]]; do
       PROJECT="$2"
       shift 2
       ;;
-	-u|--usb)
-	  [[ $# -ge 2 ]] || die "Missing value for $1"
+    -u|--usb)
+      [[ $# -ge 2 ]] || die "Missing value for $1"
       USB="$2"
       shift 2
+      ;;
+    -c|--clean)
+      CLEAN=1
+      shift
       ;;
     -h|--help)
       usage
@@ -77,7 +83,7 @@ fi
 if [[ -n "$PROJECT" ]]; then
   d="${SCRIPT_DIR}/${PROJECT}"
   if is_project "$d"; then
-    setup_project "${TARGET}" "$d" "${USB}"
+    setup_project "${TARGET}" "$d" "${USB}" $CLEAN
   fi
 else
   shopt -s nullglob
@@ -85,7 +91,7 @@ else
     # `*/` glob ensures it's a directory; trim trailing slash for prettiness
     d="${d%/}"
     if is_project "$d"; then
-      setup_project "${TARGET}" "$d" "${USB}"
+      setup_project "${TARGET}" "$d" "${USB}" $CLEAN
     fi
   done
 fi

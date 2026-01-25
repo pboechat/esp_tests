@@ -102,6 +102,7 @@ setup_project() {
   local target="$1"
   local project_dir="$2"
   local usb="$3"
+  local clean=${4:-0}
 
   [[ -n "$target" ]] || die "Missing target"
 
@@ -135,13 +136,18 @@ setup_project() {
 
   pushd "$project_dir" >/dev/null
 
+  if [[ $clean -ne 0 && -d "build_${target}" ]]; then
+    rm -Rdf "build_${target}"
+  fi
+
   idf.py -B "build_${target}" set-target "${target}"
 
   local sdkconfig_defaults_path="${project_dir}/sdkconfig.defaults"
   [[ -f "$sdkconfig_defaults_path" ]] || touch "$sdkconfig_defaults_path"
 
   local defaults_settings=(
-    "CONFIG_NEWLIB_STDIN_LINE_ENDING_CRLF=y"
+    "CONFIG_LIBC_STDOUT_LINE_ENDING_LF=y"
+    "CONFIG_LIBC_STDIN_LINE_ENDING_LF=y"
     "CONFIG_ESP_SYSTEM_USE_FRAME_POINTER=y"
     "CONFIG_ESP_SYSTEM_PANIC_PRINT_REBOOT=y"
     "CONFIG_LOG_DEFAULT_LEVEL_INFO=y"
